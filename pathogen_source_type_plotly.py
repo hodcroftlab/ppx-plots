@@ -60,11 +60,11 @@ def fetch_counts(pathogen):
 # Function to generate and save the donut plot with two rings
 def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
     # Outer ring data: Proportion of sequences from 'insdc_ingest_user' and 'direct'
-    outer_labels = ['INSBC', 'Direct']
+    outer_labels = ['INSDC', 'Direct']
     outer_values = [total_counts['insdc'], total_counts['direct']]
 
     # Inner ring data: Proportion of sequences 'OPEN' vs 'RESTRICTED'
-    inner_labels = ['OPEN', 'RESTRICTED']
+    inner_labels = ['Open', 'Restricted']
     inner_values = [open_restricted_counts['open'], open_restricted_counts['restricted']]
 
     # Create the plotly donut plot
@@ -76,7 +76,7 @@ def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
         values=inner_values,
         direction="counterclockwise",
         domain={'x': [0.15, 0.85], 'y': [0.15, 0.85]},
-        hole=0.5,  # smaller hole size for the inner ring
+        hole=0.7,  # smaller hole size for the inner ring
         hoverinfo="label+percent",
         marker=dict(colors=["green", "red"]),
         name="Data Use Terms"
@@ -87,7 +87,7 @@ def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
         labels=outer_labels,
         values=outer_values,
         direction="counterclockwise",
-        hole=0.7,  # hole size to create a donut plot
+        hole=0.8,  # hole size to create a donut plot
         hoverinfo="label+percent",
         marker=dict(colors=["royalblue", "darkorange"]),
         name="Submitter Type"
@@ -106,14 +106,14 @@ def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
                 showarrow=False,
                 text="Submitter Type",
                 x=0.5,
-                y=0.75
+                y=1
             ),
             dict(
                 font=dict(size=20),
                 showarrow=False,
                 text="Data Use Terms",
                 x=0.5,
-                y=0.25
+                y=0.7
             )
         ]
     )
