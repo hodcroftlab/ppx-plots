@@ -1,24 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <title>Ebola-Zaire Sequence Counts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathogen Data Visualizations</title>
+    <style>
+        /* Add some basic styling for layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .plot-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .plot {
+            width: 48%; /* Adjust width to control the size of each plot */
+            min-width: 300px; /* Ensure that plots don't get too small */
+            height: 500px; /* Set a fixed height for the plots */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
 </head>
-
 <body>
-    <h1>Ebola-Zaire Sequence Counts (Last 6 Months)</h1>
-    <img src="ebola_counts.png" alt="Ebola-Zaire Sequence Chart">
+    <h1>Pathogen Data Visualizations</h1>
+
+    <div class="plot-container">
+        <!-- Loop through the pathogens and display both plots for each -->
+        <div class="plot">
+            <h2>Ebola Zaire</h2>
+            <iframe src="images/ebola-zaire_donut_plot.html" title="Ebola Zaire Donut Plot"></iframe>
+        </div>
+        <div class="plot">
+            <h2>Ebola Zaire (6 Month Counts)</h2>
+            <iframe src="images/ebola-zaire_6monthcounts_interactive.html" title="Ebola Zaire 6 Month Counts"></iframe>
+        </div>
+
+        <div class="plot">
+            <h2>Ebola Sudan</h2>
+            <iframe src="images/ebola-sudan_donut_plot.html" title="Ebola Sudan Donut Plot"></iframe>
+        </div>
+        <div class="plot">
+            <h2>Ebola Sudan (6 Month Counts)</h2>
+            <iframe src="images/ebola-sudan_6monthcounts_interactive.html" title="Ebola Sudan 6 Month Counts"></iframe>
+        </div>
+
+        <div class="plot">
+            <h2>Mpox</h2>
+            <iframe src="images/mpox_donut_plot.html" title="Mpox Donut Plot"></iframe>
+        </div>
+        <div class="plot">
+            <h2>Mpox (6 Month Counts)</h2>
+            <iframe src="images/mpox_6monthcounts_interactive.html" title="Mpox 6 Month Counts"></iframe>
+        </div>
+
+        <div class="plot">
+            <h2>West Nile</h2>
+            <iframe src="images/west-nile_donut_plot.html" title="West Nile Donut Plot"></iframe>
+        </div>
+        <div class="plot">
+            <h2>West Nile (6 Month Counts)</h2>
+            <iframe src="images/west-nile_6monthcounts_interactive.html" title="West Nile 6 Month Counts"></iframe>
+        </div>
+
+        <div class="plot">
+            <h2>CCHF</h2>
+            <iframe src="images/cchf_donut_plot.html" title="CCHF Donut Plot"></iframe>
+        </div>
+        <div class="plot">
+            <h2>CCHF (6 Month Counts)</h2>
+            <iframe src="images/cchf_6monthcounts_interactive.html" title="CCHF 6 Month Counts"></iframe>
+        </div>
+    </div>
 </body>
-
-<iframe src="images/ebola-zaire_6monthcounts_interactive.html" width="100%" height="600px"></iframe>
-
-<iframe src="images/ebola-sudan_6monthcounts_interactive.html" width="100%" height="600px"></iframe>
-
-<iframe src="images/mpox_6monthcounts_interactive.html" width="100%" height="600px"></iframe>
-
-<iframe src="images/cchf_6monthcounts_interactive.html" width="100%" height="600px"></iframe>
-
-<iframe src="images/west-nile_6monthcounts_interactive.html" width="100%" height="600px"></iframe>
-
 </html>

@@ -1,8 +1,74 @@
-# pathogen_counts_plotly
-import plotly.graph_objects as go
+# pathogen_counts.py
+import requests
 import pandas as pd
+import plotly.graph_objects as go
+import os
+from datetime import datetime, timedelta
 
-# Function to generate and save an interactive stacked bar chart using Plotly
+# Step 1: Create the 'images' folder if it doesn't exist
+os.makedirs("images", exist_ok=True)
+
+# Step 2: Define pathogens to process
+pathogens = ["ebola-zaire", "ebola-sudan", "mpox", "west-nile", "cchf"]
+
+# Step 3: Get the last 6 months' date range
+end_date = datetime.today()
+start_date = end_date - timedelta(days=180)
+
+# Function to fetch and count sequences for a given pathogen
+def fetch_monthly_counts(pathogen):
+    print(f"Inside monthly counts for {pathogen}")
+    monthly_counts = []
+    ncbi_monthly_counts = []
+    
+    for i in range(6):
+
+        # Make calls for all submitters
+        # Get first and last day of the month
+        month_start = (start_date + timedelta(days=i * 30)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+        # API request parameters
+        api_url = f"https://lapis.pathoplexus.org/{pathogen}/sample/aggregated"
+        params = {
+            "earliestReleaseDateFrom": month_start.strftime("%Y-%m-%d"),
+            "earliestReleaseDateTo": month_end.strftime("%Y-%m-%d"),
+        }
+
+        # Make the API request
+        response = requests.get(api_url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            # Extract count if available, otherwise 0
+            count = data['data'][0]['count'] if data.get('data') else 0
+            monthly_counts.append((month_start.strftime("%Y-%m"), count))
+        else:
+            print(f"Error fetching data for {pathogen} in {month_start.strftime('%Y-%m')}: {response.status_code}")
+            monthly_counts.append((month_start.strftime("%Y-%m"), 0))
+
+        # Make calls for NCBI submitters
+        params = {
+            "earliestReleaseDateFrom": month_start.strftime("%Y-%m-%d"),
+            "earliestReleaseDateTo": month_end.strftime("%Y-%m-%d"),
+            "submitter": "insdc_ingest_user",
+        }
+
+        # Make the API request
+        response = requests.get(api_url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            # Extract count if available, otherwise 0
+            count = data['data'][0]['count'] if data.get('data') else 0
+            ncbi_monthly_counts.append((month_start.strftime("%Y-%m"), count))
+        else:
+            print(f"Error fetching data for {pathogen} in {month_start.strftime('%Y-%m')}: {response.status_code}")
+            ncbi_monthly_counts.append((month_start.strftime("%Y-%m"), 0))
+    
+    return monthly_counts, ncbi_monthly_counts
+
+# Function to generate and save a stacked bar chart using Plotly
 def generate_chart(pathogen, monthly_counts, ncbi_counts):
     # Create a DataFrame from the counts
     df = pd.DataFrame(monthly_counts, columns=["month", "total_count"])
@@ -12,17 +78,22 @@ def generate_chart(pathogen, monthly_counts, ncbi_counts):
     df["ncbi_count"] = df2["count"]
     df["direct_count"] = df["total_count"] - df["ncbi_count"]
 
-    # Create the stacked bar chart with Plotly
+    # Create a stacked bar chart using Plotly
     fig = go.Figure()
 
-    # Add bar for NCBI (blue)
+    # Add traces for NCBI and Direct counts
     fig.add_trace(go.Bar(
-        x=df["month"], y=df["ncbi_count"], name="NCBI", marker_color="royalblue"
+        x=df["month"],
+        y=df["ncbi_count"],
+        name="NCBI",
+        marker_color="royalblue"
     ))
 
-    # Add bar for Direct (orange)
     fig.add_trace(go.Bar(
-        x=df["month"], y=df["direct_count"], name="Direct", marker_color="darkorange"
+        x=df["month"],
+        y=df["direct_count"],
+        name="Direct",
+        marker_color="darkorange"
     ))
 
     # Update layout
@@ -32,8 +103,8 @@ def generate_chart(pathogen, monthly_counts, ncbi_counts):
         yaxis_title="Number of Sequences",
         barmode='stack',
         xaxis_tickangle=-45,
-        template="plotly_dark",  # Optional: Change theme for better appearance
-        autosize=True
+        template='plotly',
+        legend_title="Submitter Type"
     )
 
     # Save the chart as an HTML file
@@ -41,8 +112,10 @@ def generate_chart(pathogen, monthly_counts, ncbi_counts):
     fig.write_html(image_path)
     print(f"✅ Saved: {image_path}")
 
-# Example of usage for a single pathogen
-pathogen = "ebola-zaire"
-monthly_counts = [("2025-02", 100), ("2025-03", 200), ("2025-04", 150)]  # Sample data
-ncbi_counts = [("2025-02", 50), ("2025-03", 120), ("2025-04", 80)]  # Sample NCBI counts
-generate_chart(pathogen, monthly_counts, ncbi_counts)
+# Step 4: Process each pathogen
+for pathogen in pathogens:
+    print(f"Working on: {pathogen}")
+    counts, ncbi_counts = fetch_monthly_counts(pathogen)
+    generate_chart(pathogen, counts, ncbi_counts)
+
+print("✅ All charts generated successfully!")
