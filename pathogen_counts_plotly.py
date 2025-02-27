@@ -12,8 +12,8 @@ os.makedirs("images", exist_ok=True)
 pathogens = ["ebola-zaire", "ebola-sudan", "mpox", "west-nile", "cchf"]
 
 # Step 3: Get the last 6 months' date range
-end_date = datetime.today()
-start_date = end_date - timedelta(days=180)
+end_date = datetime.today().replace(day=1)  # Start at the beginning of the current month
+start_date = end_date - timedelta(days=180)  # Subtracting 180 days from the current month
 
 # Function to fetch and count sequences for a given pathogen
 def fetch_monthly_counts(pathogen):
@@ -25,8 +25,10 @@ def fetch_monthly_counts(pathogen):
 
         # Make calls for all submitters
         # Get first and last day of the month
-        month_start = (start_date + timedelta(days=i * 30)).replace(day=1)
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        month_start = end_date - timedelta(days=(i * 30))  # Calculate the start of the month
+        month_start = month_start.replace(day=1)  # Ensure it starts from the 1st day of the month
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # Last day of the month
+    
 
         # API request parameters
         api_url = f"https://lapis.pathoplexus.org/{pathogen}/sample/aggregated"

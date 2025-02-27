@@ -105,14 +105,14 @@ def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
                 font=dict(size=20),
                 showarrow=False,
                 text="Submitter Type",
-                x=0.5,
+                x=0,
                 y=1
             ),
             dict(
                 font=dict(size=20),
                 showarrow=False,
                 text="Data Use Terms",
-                x=0.5,
+                x=0,
                 y=0.7
             )
         ]
