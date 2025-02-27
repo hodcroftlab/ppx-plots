@@ -1,0 +1,49 @@
+name: Update Pathogen Plots
+
+on:
+  # Trigger this workflow on a schedule (daily, or adjust as needed)
+  schedule:
+    - cron: '0 0 * * *'  # This will run at midnight every day
+  
+  # Optionally, trigger on specific push events (e.g., updates to data files)
+  push:
+    paths:
+      - 'data/*'  # Specify paths to data files if applicable
+      - 'scripts/*'
+
+jobs:
+  generate_plots:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  # Check out the repository's code
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # Specify the Python version to use
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Install the dependencies from requirements.txt
+
+      - name: Fetch data and generate plots
+        run: |
+          # Run the Python script to fetch data and generate the plots
+          python pathogen_counts_plotly.py  
+          python pathogen_source_type_plotly.py
+          python pathogen_country_plotly.py
+
+      - name: Commit and push updated plots
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          
+          # Stage the changes (generated plot files)
+          git add images/* index.html
+
+          # Commit and push the changes back to the repository
+          git commit -m "Update pathogen plots"
+          git push origin master  # Adjust if you're using a different branch
