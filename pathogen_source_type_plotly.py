@@ -1,132 +1,108 @@
 import requests
-import pandas as pd
-import plotly.graph_objects as go
+import plotly.express as px
 import os
+import pandas as pd
 
 # Step 1: Create the 'images' folder if it doesn't exist
 os.makedirs("images", exist_ok=True)
 
 # Step 2: Define pathogens to process
-pathogens = ["ebola-zaire", "ebola-sudan", "mpox", "west-nile", "cchf"]
+pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b']
 
 # Function to fetch and count sequences for a given pathogen
 def fetch_counts(pathogen):
-    print(f"Inside counts for {pathogen}")
+    print(f"Fetching counts for {pathogen}")
     total_seqs = 0
     total_counts = {'insdc': 0, 'direct': 0}
     open_restricted_counts = {'open': 0, 'restricted': 0}
 
-    # API request parameters (no date range filter for all time data)
     api_url = f"https://lapis.pathoplexus.org/{pathogen}/sample/aggregated"
 
-    # 1. Make the first API request to get the total count of sequences
+    # 1. Total sequences
     response = requests.get(api_url)
     if response.status_code == 200:
         data = response.json()
-        total_count = data['data'][0]['count'] if data.get('data') else 0
-        total_counts['direct'] += total_count
-        total_seqs = total_counts['direct']
+        total_seqs = data['data'][0]['count'] if data.get('data') else 0
     else:
-        print(f"Error fetching data for {pathogen}: {response.status_code}")
-    
-    # 2. Make the second API request to get the count of sequences from 'insdc_ingest_user'
+        print(f"Error fetching total count for {pathogen}")
+
+    # 2. INSDC submissions
     params = {'submitter': 'insdc_ingest_user'}
     response = requests.get(api_url, params=params)
     if response.status_code == 200:
         data = response.json()
-        ncbi_count = data['data'][0]['count'] if data.get('data') else 0
-        total_counts['insdc'] += ncbi_count
+        insdc_count = data['data'][0]['count'] if data.get('data') else 0
+        total_counts['insdc'] = insdc_count
     else:
-        print(f"Error fetching data for {pathogen}: {response.status_code}")
-    
-    # The remainder will be 'direct' submissions
-    total_counts['direct'] = total_counts['direct'] - total_counts['insdc']
+        print(f"Error fetching INSDC count for {pathogen}")
 
-    # 3. Make the third API request to find RESTRICTED sequences
+    # 3. Restricted sequences (only from Direct submissions)
     params = {'dataUseTerms': 'RESTRICTED'}
     response = requests.get(api_url, params=params)
     if response.status_code == 200:
         data = response.json()
         restricted_count = data['data'][0]['count'] if data.get('data') else 0
-        open_restricted_counts['restricted'] += restricted_count
+        open_restricted_counts['restricted'] = restricted_count
     else:
-        print(f"Error fetching data for {pathogen}: {response.status_code}")
-    
-    # The remainder will be OPEN sequences
-    open_restricted_counts['open'] = total_seqs - open_restricted_counts['restricted']
-    
+        print(f"Error fetching restricted count for {pathogen}")
+
+    # 4. Calculate Direct submissions and Open Direct submissions
+    total_direct = total_seqs - total_counts['insdc']
+    total_counts['direct'] = total_direct
+    open_restricted_counts['open'] = total_direct - open_restricted_counts['restricted']
+
     return total_counts, open_restricted_counts
 
-# Function to generate and save the donut plot with two rings
-def generate_donut_plot(pathogen, total_counts, open_restricted_counts):
-    # Outer ring data: Proportion of sequences from 'insdc_ingest_user' and 'direct'
-    outer_labels = ['INSDC', 'Direct']
-    outer_values = [total_counts['insdc'], total_counts['direct']]
+# Function to generate and save the sunburst plot
+def generate_sunburst_plot(pathogen, total_counts, open_restricted_counts):
+    labels = []
+    parents = []
+    values = []
 
-    # Inner ring data: Proportion of sequences 'OPEN' vs 'RESTRICTED'
-    inner_labels = ['Open', 'Restricted']
-    inner_values = [open_restricted_counts['open'], open_restricted_counts['restricted']]
+    data = {
+    'count': [open_restricted_counts['restricted'], open_restricted_counts['open'], total_counts['insdc'], 0],
+    'restriction': ['Restricted', 'Open', 'Open', 'Restricted'],
+    'source': ['Direct', 'Direct', 'INSDC', 'INSDC']
+    }
+    df = pd.DataFrame(data)
 
-    # Create the plotly donut plot
-    fig = go.Figure()
+    # Create a new column for color mapping:
+    # We'll assign parents color by 'source' and leaves by 'restriction'
+    # The sunburst levels are: source (parent), restriction (child)
+    # So the color column will be source for parents, restriction for leaves
+    df['label_for_color'] = df['restriction']  # for leaves
 
-    # Inner ring (OPEN vs RESTRICTED for non-NCBI sequences)
-    fig.add_trace(go.Pie(
-        labels=inner_labels,
-        values=inner_values,
-        direction="counterclockwise",
-        domain={'x': [0.15, 0.85], 'y': [0.15, 0.85]},
-        hole=0.7,  # smaller hole size for the inner ring
-        hoverinfo="label+percent",
-        marker=dict(colors=["green", "red"]),
-        name="Data Use Terms"
-    ))
+    # Trick: append rows for parents with their own color labels and 0 count (to appear)
+    parents = df[['source']].drop_duplicates().rename(columns={'source': 'label_for_color'})
+    parents['count'] = 0
+    parents['source'] = parents['label_for_color']  # just to keep columns consistent
+    parents['restriction'] = ''  # empty for parents
 
-    # Outer ring (Total counts split by INSBC and Direct)
-    fig.add_trace(go.Pie(
-        labels=outer_labels,
-        values=outer_values,
-        direction="counterclockwise",
-        hole=0.8,  # hole size to create a donut plot
-        hoverinfo="label+percent",
-        marker=dict(colors=["royalblue", "darkorange"]),
-        name="Submitter Type"
-    ))
+    df_plot = pd.concat([df, parents], ignore_index=True)
 
-
-
-    # Update layout for better presentation
-    fig.update_layout(
-        title=f"{pathogen.replace('-', ' ').title()} Data Summary",
-        showlegend=True,
-        template="plotly",
-        annotations=[
-            dict(
-                font=dict(size=20),
-                showarrow=False,
-                text="Submitter Type",
-                x=0,
-                y=1
-            ),
-            dict(
-                font=dict(size=20),
-                showarrow=False,
-                text="Data Use Terms",
-                x=0,
-                y=0.7
-            )
-        ]
+    fig = px.sunburst(
+        df_plot, 
+        path=['source', 'restriction'], 
+        values='count',
+        title=f"{pathogen.replace('-', ' ').title()} Count and Open/Restricted Status",
+        color='label_for_color',
+        color_discrete_map={
+            'Direct': 'orange',
+            'INSDC': 'royalblue',
+            'Restricted': 'red',
+            'Open': 'green'
+        },
     )
 
-    # Save the donut plot as an HTML file
-    image_path = f"images/{pathogen}_donut_plot.html"
-    fig.write_html(image_path)
-    print(f"✅ Saved: {image_path}")
+    # Save as interactive HTML
+    out_path = f"images/{pathogen}_donut_plot.html"  # same filename as before
+    fig.write_html(out_path)
+    print(f"✅ Saved: {out_path}")
 
-# Step 4: Process each pathogen
+# Step 4: Loop through all pathogens
 for pathogen in pathogens:
-    print(f"Working on: {pathogen}")
+    print(f"🔄 Working on: {pathogen}")
     total_counts, open_restricted_counts = fetch_counts(pathogen)
-    generate_donut_plot(pathogen, total_counts, open_restricted_counts)
+    generate_sunburst_plot(pathogen, total_counts, open_restricted_counts)
 
-print("✅ All donut plots generated successfully!")
+print("✅ All sunburst plots generated and saved!")

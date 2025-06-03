@@ -3,7 +3,7 @@ import plotly.express as px
 import pandas as pd
 
 # List of pathogens to process
-pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf']
+pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b']
 
 # Function to fetch data and create map
 def create_map_for_pathogen(pathogen):
