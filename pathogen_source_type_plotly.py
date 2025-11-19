@@ -19,7 +19,8 @@ def fetch_counts(pathogen):
     api_url = f"https://lapis.pathoplexus.org/{pathogen}/sample/aggregated"
 
     # 1. Total sequences
-    response = requests.get(api_url)
+    params = {'versionStatus': 'LATEST_VERSION'}
+    response = requests.get(api_url, params=params)
     if response.status_code == 200:
         data = response.json()
         total_seqs = data['data'][0]['count'] if data.get('data') else 0
@@ -27,7 +28,7 @@ def fetch_counts(pathogen):
         print(f"Error fetching total count for {pathogen}")
 
     # 2. INSDC submissions
-    params = {'submitter': 'insdc_ingest_user'}
+    params = {'submitter': 'insdc_ingest_user', 'versionStatus': 'LATEST_VERSION'}
     response = requests.get(api_url, params=params)
     if response.status_code == 200:
         data = response.json()
@@ -37,7 +38,7 @@ def fetch_counts(pathogen):
         print(f"Error fetching INSDC count for {pathogen}")
 
     # 3. Restricted sequences (only from Direct submissions)
-    params = {'dataUseTerms': 'RESTRICTED'}
+    params = {'dataUseTerms': 'RESTRICTED', 'versionStatus': 'LATEST_VERSION'}
     response = requests.get(api_url, params=params)
     if response.status_code == 200:
         data = response.json()

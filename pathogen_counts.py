@@ -33,6 +33,7 @@ def fetch_monthly_counts(pathogen):
         params = {
             "earliestReleaseDateFrom": month_start.strftime("%Y-%m-%d"),
             "earliestReleaseDateTo": month_end.strftime("%Y-%m-%d"),
+            "versionStatus": "LATEST_VERSION",
         }
 
         # Make the API request
@@ -52,6 +53,7 @@ def fetch_monthly_counts(pathogen):
             "earliestReleaseDateFrom": month_start.strftime("%Y-%m-%d"),
             "earliestReleaseDateTo": month_end.strftime("%Y-%m-%d"),
             "submitter": "insdc_ingest_user",
+            "versionStatus": "LATEST_VERSION",
         }
 
         # Make the API request
