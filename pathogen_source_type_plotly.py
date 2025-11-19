@@ -7,7 +7,7 @@ import pandas as pd
 os.makedirs("images", exist_ok=True)
 
 # Step 2: Define pathogens to process
-pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b']
+pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b', 'measles']
 
 # Function to fetch and count sequences for a given pathogen
 def fetch_counts(pathogen):
