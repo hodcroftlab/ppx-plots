@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 os.makedirs("images", exist_ok=True)
 
 # Step 2: Define pathogens to process
-pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b']
+pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 'rsv-a', 'rsv-b', 'measles']
 
 # Step 3: Get the last 6 months' date range
 end_date = datetime.today()
