@@ -9,7 +9,8 @@ pathogens = ['mpox', 'ebola-zaire', 'ebola-sudan', 'west-nile', 'cchf', 'hmpv', 
 def create_map_for_pathogen(pathogen):
     # Step 1: Fetch data from the API for the given pathogen
     url = f"https://lapis.pathoplexus.org/{pathogen}/sample/details?fields=geoLocCountry"
-    response = requests.get(url)
+    params = {"versionStatus": "LATEST_VERSION"}
+    response = requests.get(url, params=params)
     data = response.json()
 
     # Step 2: Process the data to count the occurrences of each country
